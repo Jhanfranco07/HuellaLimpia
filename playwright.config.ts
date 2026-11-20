@@ -1,4 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import { existsSync, readFileSync } from 'node:fs';
+
+for (const file of ['.env.local', '.env.demo.local']) {
+  if (!existsSync(file)) continue;
+  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const match = /^([A-Z][A-Z0-9_]*)=(.*)$/.exec(line);
+    if (match && !process.env[match[1]]) process.env[match[1]] = match[2];
+  }
+}
 
 export default defineConfig({
   testDir: './e2e',
