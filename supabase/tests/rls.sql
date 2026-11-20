@@ -21,6 +21,12 @@ do $$ begin
     raise exception 'Cross-owner pet insert unexpectedly succeeded';
   exception when insufficient_privilege then null;
   end;
+  begin
+    update public.profiles set role='municipal',district='Comas' where id='11111111-1111-4111-8111-111111111111';
+    raise exception 'Citizen role escalation unexpectedly succeeded';
+  exception when others then
+    if sqlerrm='Citizen role escalation unexpectedly succeeded' then raise; end if;
+  end;
 end $$;
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
 do $$ begin
