@@ -26,6 +26,11 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page).toHaveURL(/\/panel$/);
     await expect(page.getByRole('link', { name: 'Mis mascotas' })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Panel' }).getByRole('link', { name: 'Consejos' }).click();
+    await expect(page).toHaveURL(/\/panel\/consejos$/);
+    await expect(page.getByRole('heading', { name: 'Consejos para cuidar Lima Norte' })).toBeVisible();
+    await page.getByRole('link', { name: 'Volver al panel' }).click();
+    await expect(page).toHaveURL(/\/panel$/);
     await page.reload();
     await expect(page.getByRole('link', { name: 'Mis reportes', exact: true })).toBeVisible();
     await page.goto('/panel/gestion');
@@ -33,18 +38,6 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
     await page.goto('/panel');
     await expect(page).toHaveURL(/\/acceso$/);
-  });
-
-  test('HL-8: Consejos del panel conserva la sesión y permite volver', async ({ page }) => {
-    await page.goto('/acceso');
-    await page.getByLabel('Correo electrónico').fill(citizenEmail!);
-    await page.getByLabel('Contraseña').fill(citizenPassword!);
-    await page.getByRole('button', { name: 'Ingresar' }).click();
-    await page.getByRole('navigation', { name: 'Panel' }).getByRole('link', { name: 'Consejos' }).click();
-    await expect(page).toHaveURL(/\/panel\/consejos$/);
-    await expect(page.getByRole('heading', { name: 'Consejos para cuidar Lima Norte' })).toBeVisible();
-    await page.getByRole('link', { name: 'Volver al panel' }).click();
-    await expect(page).toHaveURL(/\/panel$/);
   });
 
   test('HL-11: credenciales incorrectas muestran error', async ({ page }) => {
