@@ -9,9 +9,9 @@ PR de integración: [#3 hacia `test`](https://github.com/Jhanfranco07/HuellaLimp
 | HL-7 | `src/app/page.tsx`, `e2e/landing.spec.ts`, capturas HL-7 | Playwright escritorio y móvil pasó | Ya integrada antes de esta rama |
 | HL-8 | Sección `#educacion` de la portada; `e2e/sprint1.spec.ts` | Navegación por teclado y contenido visibles en ambos tamaños | Contenido educativo básico |
 | HL-9 | Enlaces de portada a `/acceso` y `/acceso?modo=registro` | Playwright HL-7 pasó | Ya integrada antes de esta rama |
-| HL-10 | `src/app/actions.ts`, `src/app/acceso/page.tsx`; `e2e/sprint1.spec.ts` | Registro real local, perfil ciudadano, rechazo de duplicado y campos inválidos. Con confirmación activada temporalmente, Auth no entregó sesión y Mailpit recibió el correo | No se verificó la apertura del enlace de confirmación; la configuración se restauró a `enable_confirmations=false` |
-| HL-11 | Inicio/cierre por Supabase Auth; `e2e/sprint1.spec.ts` | Login correcto e incorrecto, persistencia tras reload y bloqueo tras logout | Solo entorno local |
-| HL-13 | `src/lib/auth.ts`, paneles, `supabase/tests/rls.sql` y `e2e/sprint1.spec.ts` | Ciudadano denegado en gestión, municipal accede a Comas; la API local rechaza actualización municipal y elevación de rol desde sesión ciudadana, sin cambiar datos | Falta prueba con Cloud |
+| HL-10 | `src/app/actions.ts`, `src/app/acceso/page.tsx`; `e2e/sprint1.spec.ts` y `scripts/verify-cloud-sprint1.mjs` | Registro real local con validación y duplicado; en Cloud, registro único con buzón controlado y confirmación manual, seguido de perfil `citizen` automático | No se probó duplicado en Cloud |
+| HL-11 | Inicio/cierre por Supabase Auth; `e2e/sprint1.spec.ts` y guion Cloud | Login correcto e incorrecto, persistencia tras reload y bloqueo tras logout en local; login y logout con cuenta confirmada en Cloud | Persistencia de navegador en Cloud no probada |
+| HL-13 | `src/lib/auth.ts`, paneles, `supabase/tests/rls.sql`, `e2e/sprint1.spec.ts` y guion Cloud | Ciudadano denegado en gestión, municipal accede a Comas; API local rechaza actualización municipal y elevación de rol; API Cloud rechazó elevación pese a metadatos `role=municipal` y mantuvo `citizen` | Actualización municipal directa no probada en Cloud |
 
 ## Comprobaciones
 
