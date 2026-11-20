@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, MapPin, PawPrint, ShieldCheck } from 'lucide-react';
 import { districts } from '../lib/validation';
+import { Advice } from '../components/advice';
 
 export default function Home() {
   return <>
@@ -52,11 +53,7 @@ export default function Home() {
           <div><h3>3. Consulta el avance</h3><p>Revisa el estado de atención en tu panel.</p></div>
         </div>
       </section>
-      <section className="section" id="educacion" style={{ background: 'white' }}><div className="container"><h2>Convivencia responsable</h2><div className="grid">
-        <div className="card"><h3>Lleva bolsas en cada paseo</h3><p>Recoge los desechos de tu mascota y deposítalos en un recipiente adecuado.</p></div>
-        <div className="card"><h3>Cuida las áreas comunes</h3><p>Respeta jardines, veredas y espacios de juego.</p></div>
-        <div className="card"><h3>Comparte buenos hábitos</h3><p>Una conversación cordial ayuda a cuidar el barrio entre vecinos.</p></div>
-      </div></div></section>
+      <section className="section" id="educacion" style={{ background: 'white' }}><div className="container"><h2>Convivencia responsable</h2><p className="muted">Hábitos sencillos para compartir mejor el barrio con nuestras mascotas.</p><Advice /></div></section>
       <section className="container section" id="preguntas"><h2>Preguntas frecuentes</h2>
         <details className="card"><summary>¿Tiene costo registrar una mascota?</summary><p>No. El registro en HuellaLimpia es gratuito.</p></details>
         <details className="card"><summary>¿Qué distritos están disponibles?</summary><p>Los Olivos, Comas, San Martín de Porres e Independencia.</p></details>

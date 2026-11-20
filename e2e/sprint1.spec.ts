@@ -13,9 +13,10 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByRole('link', { name: 'Consejos' }).focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/#educacion$/);
-    await expect(page.getByText('Lleva bolsas en cada paseo')).toBeVisible();
-    await expect(page.getByText('Cuida las áreas comunes')).toBeVisible();
-    await expect(page.getByText('Recoge los desechos de tu mascota')).toBeVisible();
+    await expect(page.getByText('Sal preparado a cada paseo')).toBeVisible();
+    await expect(page.getByText('Cuida parques y veredas')).toBeVisible();
+    await expect(page.getByText('Recoge los desechos de tu mascota', { exact: false })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Parque público del distrito de Los Olivos' })).toBeVisible();
   });
 
   test('HL-11 y HL-13: ciudadano inicia sesión, persiste y no entra a gestión', async ({ page }) => {
@@ -32,6 +33,18 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
     await page.goto('/panel');
     await expect(page).toHaveURL(/\/acceso$/);
+  });
+
+  test('HL-8: Consejos del panel conserva la sesión y permite volver', async ({ page }) => {
+    await page.goto('/acceso');
+    await page.getByLabel('Correo electrónico').fill(citizenEmail!);
+    await page.getByLabel('Contraseña').fill(citizenPassword!);
+    await page.getByRole('button', { name: 'Ingresar' }).click();
+    await page.getByRole('navigation', { name: 'Panel' }).getByRole('link', { name: 'Consejos' }).click();
+    await expect(page).toHaveURL(/\/panel\/consejos$/);
+    await expect(page.getByRole('heading', { name: 'Consejos para cuidar Lima Norte' })).toBeVisible();
+    await page.getByRole('link', { name: 'Volver al panel' }).click();
+    await expect(page).toHaveURL(/\/panel$/);
   });
 
   test('HL-11: credenciales incorrectas muestran error', async ({ page }) => {
