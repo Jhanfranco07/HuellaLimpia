@@ -17,7 +17,7 @@ El registro público crea ciudadanos. La asignación municipal requiere interven
 
 ## Verificación
 
-`npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+`npm run typecheck`, `npm run lint`, `npm test`, `npm run build`. Tras el build, `npm run test:e2e` comprueba la portada con Playwright en tamaños móvil y escritorio.
 
 ## Arquitectura y seguridad
 

@@ -36,12 +36,31 @@ jobs:
         run: |
           if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then exit 1; fi
           if git grep -nE 'service_role|SUPABASE_SERVICE_ROLE_KEY|-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY-----' -- ':!*.md' ':!.github/workflows/devsecops.yml'; then exit 1; fi
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
   gate:
     if: always()
-    needs: [quality, security]
+    needs: [quality, security, browser]
     runs-on: ubuntu-latest
     steps:
       - name: Require mandatory checks
         run: |
           test '${{ needs.quality.result }}' = success
           test '${{ needs.security.result }}' = success
+          test '${{ needs.browser.result }}' = success
