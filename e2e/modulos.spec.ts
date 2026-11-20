@@ -132,12 +132,12 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await report.getByRole('button', { name: 'Guardar estado' }).click();
     await expect(page.getByRole('status')).toContainText('Estado actualizado');
     const updated = page.locator('article').filter({ hasText: address });
-    await expect(updated.getByLabel('Estado')).toHaveValue('en_atencion');
+    await expect(updated.locator('p.muted').first()).toContainText('en atencion');
     await updated.getByLabel('Estado').selectOption('resuelto');
     await updated.getByLabel('Observación pública (obligatoria para rechazar)').fill('Se realizó la limpieza del espacio.');
     await updated.getByRole('button', { name: 'Guardar estado' }).click();
     await expect(page.getByRole('status')).toContainText('Estado actualizado');
-    await expect(updated.getByLabel('Estado')).toHaveValue('resuelto');
+    await expect(updated.locator('p.muted').first()).toContainText('resuelto');
     await updated.getByLabel('Nueva nota interna').fill('Turno de la cuadrilla municipal de prueba.');
     await updated.getByRole('button', { name: 'Guardar nota interna' }).click();
     await expect(page).toHaveURL(/mensaje=nota/,{timeout:20000});
