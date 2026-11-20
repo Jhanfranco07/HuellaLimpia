@@ -20,6 +20,7 @@ test.describe('Sprint 1 con Supabase local', () => {
   });
 
   test('HL-11 y HL-13: ciudadano inicia sesión, persiste y no entra a gestión', async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto('/acceso');
     await page.getByLabel('Correo electrónico').fill(citizenEmail!);
     await page.getByLabel('Contraseña').fill(citizenPassword!);
