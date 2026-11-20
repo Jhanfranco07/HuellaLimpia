@@ -1,0 +1,3 @@
+import { describe,expect,it } from 'vitest';
+import { incidentSchema,petSchema,statusSchema } from './validation';
+describe('validaciones de dominio',()=>{it('rechaza mascota con edad imposible',()=>{expect(petSchema.safeParse({name:'Luna',species:'Perro',age:80}).success).toBe(false)});it('acepta reporte de distrito admitido',()=>{expect(incidentSchema.safeParse({district:'Comas',address:'Av. principal 123',description:'Hay desechos acumulados junto al parque.'}).success).toBe(true)});it('exige motivo al rechazar',()=>{expect(statusSchema.safeParse({status:'rechazado',observation:''}).success).toBe(false)})});
