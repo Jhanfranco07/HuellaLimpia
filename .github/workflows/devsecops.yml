@@ -54,9 +54,22 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start isolated Supabase stack and apply migrations
+        run: npx supabase start --exclude realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Verify ownership and municipal RLS
+        run: docker exec -i supabase_db_HuellaLimpia psql -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/tests/rls.sql
   gate:
     if: always()
-    needs: [quality, security, browser]
+    needs: [quality, security, browser, database]
     runs-on: ubuntu-latest
     steps:
       - name: Require mandatory checks
@@ -64,3 +77,4 @@ jobs:
           test '${{ needs.quality.result }}' = success
           test '${{ needs.security.result }}' = success
           test '${{ needs.browser.result }}' = success
+          test '${{ needs.database.result }}' = success
