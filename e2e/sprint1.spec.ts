@@ -39,7 +39,7 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByLabel('Correo electrónico').fill(citizenEmail!);
     await page.getByLabel('Contraseña').fill('clave-incorrecta');
     await page.getByRole('button', { name: 'Ingresar' }).click();
-    await expect(page.getByRole('alert')).toContainText('Revisa tu correo y contraseña');
+    await expect(page.locator('main p[role="alert"]')).toContainText('Revisa tu correo y contraseña');
   });
 
   test('HL-13: municipal accede a su gestión y no a mascotas ciudadanas', async ({ page }) => {
@@ -109,7 +109,7 @@ test.describe('Sprint 1 con Supabase local', () => {
     await page.getByLabel('Correo electrónico').fill(citizenEmail!);
     await page.getByLabel('Contraseña').fill('ClaveTemporalSegura2026!');
     await page.getByRole('button', { name: 'Crear cuenta' }).click();
-    await expect(page.getByRole('alert')).toContainText('Ese correo ya tiene una cuenta');
+    await expect(page.locator('main p[role="alert"]')).toContainText('Ese correo ya tiene una cuenta');
   });
 
   test('HL-10: formulario rechaza correo inválido y contraseña corta', async ({ page }) => {
