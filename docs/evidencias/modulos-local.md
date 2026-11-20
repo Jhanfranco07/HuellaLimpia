@@ -25,4 +25,10 @@ Fecha de ejecución: 20 de noviembre de 2026. Rama: `feature/modulos-ciudadanos-
 | `supabase db advisors --type security --level warn --fail-on warn` en base aislada | 0 advertencias |
 | `npm.cmd run test:e2e` | 26/26 en escritorio y móvil con Supabase local y Storage activo |
 
-La migración nueva `20261120045833_incident_photos_storage.sql` **no se aplicó en Cloud**. Antes de utilizar la rama en producción hay que comparar el estado remoto, aplicar solo esa versión si aún falta, repetir las pruebas de permisos y comprobar el despliegue. El historial existente de cuatro migraciones Cloud no se alteró durante esta verificación. GitHub Actions y Vercel se documentarán cuando tengan resultados reales.
+## Evidencia en GitHub
+
+- Commit funcional: [b42c689](https://github.com/Jhanfranco07/HuellaLimpia/commit/b42c6897a646f3bd1748fa2e9bff49284412c2be).
+- [PR #4 hacia `test`](https://github.com/Jhanfranco07/HuellaLimpia/pull/4), abierto como borrador.
+- [GitHub Actions 44680544112](https://github.com/Jhanfranco07/HuellaLimpia/actions/runs/44680544112): `quality`, `security`, `database`, `sast`, `browser` y `gate` completados con éxito.
+
+La migración nueva `20261120045833_incident_photos_storage.sql` **no se aplicó en Cloud**. Antes de utilizar la rama en producción hay que comparar el estado remoto, aplicar solo esa versión si aún falta, repetir las pruebas de permisos y comprobar el despliegue. El historial existente de cuatro migraciones Cloud no se alteró durante esta verificación. Vercel continúa sin proyecto ni URL verificados desde esta sesión.
