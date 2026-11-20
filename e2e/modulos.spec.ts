@@ -1,4 +1,37 @@
 import { expect, test } from '@playwright/test';
+import { randomBytes } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
+
+function pngChunk(type: string, data: Buffer) {
+  const bytes = Buffer.concat([Buffer.from(type), data]);
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  const length = Buffer.alloc(4);
+  const checksum = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  checksum.writeUInt32BE((crc ^ 0xffffffff) >>> 0);
+  return Buffer.concat([length, bytes, checksum]);
+}
+
+function largeValidPng() {
+  const width = 700;
+  const height = 700;
+  const pixels = randomBytes(width * height * 3);
+  const rows = Buffer.alloc(height * (1 + width * 3));
+  for (let y = 0; y < height; y++) pixels.copy(rows, y * (1 + width * 3) + 1, y * width * 3, (y + 1) * width * 3);
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  header[9] = 2;
+  return Buffer.concat([
+    Buffer.from('89504e470d0a1a0a', 'hex'),
+    pngChunk('IHDR', header), pngChunk('IDAT', deflateSync(rows)), pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
 const citizenEmail = process.env.CIUDADANO_EMAIL;
 const citizenPassword = process.env.CIUDADANO_PASSWORD;
@@ -59,14 +92,20 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByLabel('Distrito').selectOption('Comas');
     await page.getByLabel('Dirección o referencia').fill(address);
     await page.getByLabel('Describe el problema').fill('Se encontraron residuos de mascotas sin recoger en el parque.');
+    const image = largeValidPng();
+    expect(image.length).toBeGreaterThan(1024 * 1024);
+    expect(image.length).toBeLessThan(5 * 1024 * 1024);
     await page.getByLabel('Fotografía (opcional)').setInputFiles({
       name: 'evidencia.png', mimeType: 'image/png',
-      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jqVcAAAAASUVORK5CYII=', 'base64'),
+      buffer: image,
     });
     await page.getByRole('button', { name: 'Enviar reporte' }).click();
     await expect(page.getByRole('status')).toContainText('Reporte enviado');
     const citizenReport = page.locator('article').filter({ hasText: address });
     await expect(citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' })).toBeVisible();
+    const photoResponse = await page.request.get(await citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' }).getAttribute('href') ?? '');
+    expect(photoResponse.ok()).toBe(true);
+    expect(photoResponse.headers()['content-type']).toContain('image/png');
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
 
     await page.goto('/acceso');
@@ -95,5 +134,28 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByRole('link', { name: 'Mis reportes', exact: true }).click();
     await expect(page.locator('article').filter({ hasText: address })).toContainText('resuelto');
     await expect(page.locator('article').filter({ hasText: address })).toContainText('Se realizó la limpieza del espacio.');
+  });
+
+  test('fotografía: rechaza archivo demasiado grande y formato no permitido', async ({ page }) => {
+    await page.goto('/acceso');
+    await page.getByLabel('Correo electrónico').fill(citizenEmail!);
+    await page.getByLabel('Contraseña').fill(citizenPassword!);
+    await page.getByRole('button', { name: 'Ingresar' }).click();
+    await expect(page).toHaveURL(/\/panel$/);
+    await page.getByRole('link', { name: 'Mis reportes', exact: true }).click();
+    await expect(page).toHaveURL(/\/panel\/reportes$/);
+    for (const [name, type, buffer] of [
+      ['grande.png', 'image/png', Buffer.alloc(5 * 1024 * 1024 + 1, 1)],
+      ['formato.gif', 'image/gif', Buffer.from('GIF89a')],
+    ] as const) {
+      const address = `Prueba rechazada ${name} ${Date.now()}`;
+      await page.getByLabel('Distrito').selectOption('Comas');
+      await page.getByLabel('Dirección o referencia').fill(address);
+      await page.getByLabel('Describe el problema').fill('Reporte que no debe crearse por fotografía inválida.');
+      await page.getByLabel('Fotografía (opcional)').setInputFiles({ name, mimeType: type, buffer });
+      await page.getByRole('button', { name: 'Enviar reporte' }).click();
+      await expect(page.locator('main p[role="alert"]')).toContainText('JPG, PNG o WebP válida de hasta 5 MB');
+      await expect(page.locator('article').filter({ hasText: address })).toHaveCount(0);
+    }
   });
 });
