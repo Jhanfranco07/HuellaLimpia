@@ -2,6 +2,8 @@
 
 Proyecto local: Supabase CLI 3.2.0, API 127.0.0.1:54421. Las cuentas ficticias están en `.env.demo.local`, excluido de Git. La aplicación se conecta mediante `.env.local`, también excluido. Ninguna contraseña se versionó.
 
+PR de integración: [#3 hacia `test`](https://github.com/Jhanfranco07/HuellaLimpia/pull/3), abierto como borrador. Commit de este cierre: [`fa1581d`](https://github.com/Jhanfranco07/HuellaLimpia/commit/fa1581d). [GitHub Actions del commit](https://github.com/Jhanfranco07/HuellaLimpia/actions/runs/44669371287): `quality`, `security`, `database`, `browser` y `gate` finalizaron correctamente. El job `browser` de CI omite los casos que requieren las cuentas privadas; la ejecución local de Playwright es la evidencia de esos flujos.
+
 | Historia | Implementación y evidencia | Resultado local | Límite |
 | --- | --- | --- | --- |
 | HL-7 | `src/app/page.tsx`, `e2e/landing.spec.ts`, capturas HL-7 | Playwright escritorio y móvil pasó | Ya integrada antes de esta rama |
