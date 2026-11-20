@@ -11,7 +11,7 @@ PR de integración: [#3 hacia `test`](https://github.com/Jhanfranco07/HuellaLimp
 | HL-9 | Enlaces de portada a `/acceso` y `/acceso?modo=registro` | Playwright HL-7 pasó | Ya integrada antes de esta rama |
 | HL-10 | `src/app/actions.ts`, `src/app/acceso/page.tsx`; `e2e/sprint1.spec.ts` | Registro real local, perfil ciudadano, rechazo de duplicado y campos inválidos. Con confirmación activada temporalmente, Auth no entregó sesión y Mailpit recibió el correo | No se verificó la apertura del enlace de confirmación; la configuración se restauró a `enable_confirmations=false` |
 | HL-11 | Inicio/cierre por Supabase Auth; `e2e/sprint1.spec.ts` | Login correcto e incorrecto, persistencia tras reload y bloqueo tras logout | Solo entorno local |
-| HL-13 | `src/lib/auth.ts`, paneles y `supabase/tests/rls.sql` | Ciudadano denegado en gestión, municipal accede a Comas, RLS impide escritura ajena y elevación de rol | Falta prueba con Cloud y llamada privilegiada directa desde navegador |
+| HL-13 | `src/lib/auth.ts`, paneles, `supabase/tests/rls.sql` y `e2e/sprint1.spec.ts` | Ciudadano denegado en gestión, municipal accede a Comas; la API local rechaza actualización municipal y elevación de rol desde sesión ciudadana, sin cambiar datos | Falta prueba con Cloud |
 
 ## Comprobaciones
 
@@ -19,10 +19,10 @@ PR de integración: [#3 hacia `test`](https://github.com/Jhanfranco07/HuellaLimp
 - Dos perfiles ficticios locales: ciudadano en Comas y municipal de Comas.
 - TypeScript y ESLint: pasaron.
 - Vitest: 6/6 pasaron.
-- Playwright: 18/18 pasaron en escritorio y móvil contra Auth local restaurado.
+- Playwright: 20/20 pasaron en escritorio y móvil contra Auth local, incluida la operación municipal directa rechazada por la API.
 - Auditoría de dependencias: `npm audit --audit-level=high --offline`, cero vulnerabilidades encontradas en la caché local.
 - Build de producción: pasó. El intento aislado dentro del sandbox terminó al generar páginas; con acceso local normal terminó correctamente.
-- SQL RLS: pasó en transacción revertida, incluida denegación de elevación de rol.
+- SQL RLS: pasó en transacción revertida, incluida denegación de elevación de rol y actualización municipal desde una sesión ciudadana.
 - Estado de Postgres local tras las pruebas: 4 tablas públicas, 9 políticas, 2 perfiles ficticios en Comas y perfiles `citizen` para los registros nuevos.
 
-Los flujos completos con cuentas ficticias dependen del archivo privado `.env.demo.local`; CI no tiene esas credenciales y omite estos casos. No marcar las historias como Listo en Jira hasta revisar las pruebas de GitHub Actions del commit final y los límites indicados.
+El workflow actualizado crea cuentas ficticias efímeras dentro de su propia pila Supabase local para ejecutar estos flujos sin credenciales privadas de Cloud. Su resultado debe verificarse en GitHub Actions después del siguiente commit. No marcar las historias como Listo en Jira hasta revisar ese resultado y los límites indicados.

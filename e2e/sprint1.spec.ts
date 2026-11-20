@@ -54,6 +54,42 @@ test.describe('Sprint 1 con Supabase local', () => {
     await expect(page).toHaveURL(/\/panel$/);
   });
 
+  test('HL-13: API rechaza una actualización municipal desde sesión ciudadana', async ({ request }) => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    test.skip(!url || !key, 'Requiere API Supabase local');
+    const signIn = await request.post(`${url}/auth/v1/token?grant_type=password`, {
+      headers: { apikey: key! },
+      data: { email: citizenEmail, password: citizenPassword },
+    });
+    expect(signIn.ok()).toBe(true);
+    const { access_token: token, user } = await signIn.json();
+    const headers = { apikey: key!, Authorization: `Bearer ${token}` };
+    const created = await request.post(`${url}/rest/v1/incidents`, {
+      headers: { ...headers, Prefer: 'return=representation' },
+      data: { reporter_id: user.id, district: 'Comas', address: 'Parque de prueba 123', description: 'Reporte de prueba para comprobar el control municipal.' },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const [{ id }] = await created.json();
+    const attempt = await request.patch(`${url}/rest/v1/incidents?id=eq.${id}`, {
+      headers: { ...headers, Prefer: 'return=representation' },
+      data: { status: 'resuelto' },
+    });
+    expect(attempt.ok()).toBe(true);
+    expect(await attempt.json()).toEqual([]);
+    const unchanged = await request.get(`${url}/rest/v1/incidents?id=eq.${id}&select=status`, { headers });
+    expect(unchanged.ok()).toBe(true);
+    expect(await unchanged.json()).toEqual([{ status: 'pendiente' }]);
+    const elevation = await request.patch(`${url}/rest/v1/profiles?id=eq.${user.id}`, {
+      headers: { ...headers, Prefer: 'return=representation' },
+      data: { role: 'municipal', district: 'Comas' },
+    });
+    expect(elevation.ok()).toBe(false);
+    const profile = await request.get(`${url}/rest/v1/profiles?id=eq.${user.id}&select=role`, { headers });
+    expect(profile.ok()).toBe(true);
+    expect(await profile.json()).toEqual([{ role: 'citizen' }]);
+  });
+
   test('HL-10: registro crea ciudadano y no permite escoger rol', async ({ page }) => {
     const email = `nuevo-${Date.now()}@huellalimpia.test`;
     await page.goto('/acceso?modo=registro');

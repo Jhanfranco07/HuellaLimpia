@@ -16,6 +16,10 @@ do $$ begin
   if (select count(*) from public.pets) <> 1 then raise exception 'RLS pets citizen failed'; end if;
   if (select count(*) from public.incidents) <> 1 then raise exception 'RLS incidents citizen failed'; end if;
   if (select count(*) from public.profiles) <> 1 then raise exception 'RLS profiles citizen failed'; end if;
+  if public.is_municipal_for('Comas') then raise exception 'Citizen municipal lookup unexpectedly succeeded'; end if;
+  update public.incidents set status='resuelto' where reporter_id=auth.uid() and district='Comas';
+  if found then raise exception 'Citizen municipal update unexpectedly succeeded'; end if;
+  if (select count(*) from public.incidents where status='pendiente') <> 1 then raise exception 'Citizen update changed an incident'; end if;
   begin
     insert into public.pets(owner_id,name,species,age) values ('22222222-2222-4222-8222-222222222222','Intruso','Perro',2);
     raise exception 'Cross-owner pet insert unexpectedly succeeded';
@@ -30,6 +34,8 @@ do $$ begin
 end $$;
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
 do $$ begin
+  if not public.is_municipal_for('Comas') then raise exception 'Municipal lookup failed'; end if;
+  if public.is_municipal_for('Los Olivos') then raise exception 'Out-of-district municipal lookup succeeded'; end if;
   if (select count(*) from public.incidents) <> 1 then raise exception 'RLS municipal district failed'; end if;
   if (select count(*) from public.pets) <> 0 then raise exception 'RLS municipal pets failed'; end if;
   update public.incidents set status='resuelto' where district='Los Olivos';
