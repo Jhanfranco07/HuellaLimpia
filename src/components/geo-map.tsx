@@ -1,20 +1,25 @@
+'use client';
+
+import { useState } from 'react';
+
 type MapPoint={latitude:number;longitude:number;label:string;count?:number};
-const bounds={west:-77.25,east:-76.85,north:-11.75,south:-12.15};
+const overview='https://www.openstreetmap.org/export/embed.html?bbox=-77.25%2C-12.15%2C-76.85%2C-11.75&layer=mapnik';
+
+function pointUrl(point:MapPoint){
+  const lat=point.latitude.toFixed(6);
+  const lon=point.longitude.toFixed(6);
+  const bbox=[point.longitude-.012,point.latitude-.008,point.longitude+.012,point.latitude+.008]
+    .map(value=>value.toFixed(6)).join(',');
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lon}`)}`;
+}
 
 export function GeoMap({points,title}:{points:MapPoint[];title:string}){
-  const width=760,height=400,padding=46;
-  const position=(latitude:number,longitude:number)=>({
-    x:padding+(longitude-bounds.west)/(bounds.east-bounds.west)*(width-2*padding),
-    y:padding+(bounds.north-latitude)/(bounds.north-bounds.south)*(height-2*padding)
-  });
+  const [selected,setSelected]=useState<number|null>(null);
+  const point=selected===null?null:points[selected];
   return <div className="geo-map">
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title}. Mapa esquemático de Lima Norte con ${points.length} ubicaciones.`}>
-      <rect x="0" y="0" width={width} height={height} rx="18" fill="#e5f3eb"/>
-      {[1,2,3].map(i=><g key={i} stroke="#bdd9c8" strokeWidth="1"><line x1={padding+i*(width-2*padding)/4} y1={padding} x2={padding+i*(width-2*padding)/4} y2={height-padding}/><line x1={padding} y1={padding+i*(height-2*padding)/4} x2={width-padding} y2={padding+i*(height-2*padding)/4}/></g>)}
-      <text x={padding} y="28" fill="#365f50" fontSize="14">Norte ↑</text>
-      <text x={width-padding} y={height-14} textAnchor="end" fill="#365f50" fontSize="13">Coordenadas aproximadas · Lima Norte</text>
-      {points.map((point,index)=>{const {x,y}=position(point.latitude,point.longitude);return <g key={`${point.label}-${index}`}><circle cx={x} cy={y} r={Math.min(25,9+(point.count??1)*3)} fill="#17624d" fillOpacity=".85" stroke="white" strokeWidth="3"/><text x={x} y={y+5} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold">{point.count??1}</text><title>{point.label}: {point.count??1} {point.count===1?'reporte':'reportes'}</title></g>})}
-    </svg>
-    {points.length===0&&<p className="muted">Los reportes actuales no tienen coordenadas. Se muestran en la lista de zonas.</p>}
+    <iframe title={`${title} en OpenStreetMap`} src={point?pointUrl(point):overview} loading="lazy" referrerPolicy="strict-origin-when-cross-origin"/>
+    <p className="map-attribution">Mapa: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores de OpenStreetMap</a>.</p>
+    {points.length===0?<p className="muted">Los reportes actuales no tienen coordenadas. Se muestran en la lista de zonas.</p>
+      :<div className="map-locations" aria-label={`Ubicaciones de ${title}`}><p className="muted">Selecciona una ubicación para verla en el mapa.</p><ul>{points.map((location,index)=><li key={`${location.label}-${index}`}><button type="button" className={selected===index?'selected':''} aria-pressed={selected===index} onClick={()=>setSelected(index)}>{location.label}{location.count&&location.count>1?` · ${location.count} reportes`:''}</button></li>)}</ul></div>}
   </div>;
 }

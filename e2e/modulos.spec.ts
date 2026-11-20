@@ -104,7 +104,9 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByRole('button', { name: 'Enviar reporte' }).click();
     await expect(page.getByRole('status')).toContainText('Reporte enviado');
     const citizenReport = page.locator('article').filter({ hasText: address });
-    await expect(citizenReport.getByRole('img', { name: /Mapa esquemático/ })).toBeVisible();
+    await expect(citizenReport.getByTitle(/OpenStreetMap/)).toHaveAttribute('src', /openstreetmap\.org\/export\/embed\.html/);
+    await citizenReport.getByRole('button', { name: address }).click();
+    await expect(citizenReport.getByTitle(/OpenStreetMap/)).toHaveAttribute('src', /marker=/);
     await expect(citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' })).toBeVisible();
     const photoResponse = await page.request.get(await citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' }).getAttribute('href') ?? '');
     expect(photoResponse.ok()).toBe(true);
@@ -130,12 +132,15 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await report.getByRole('button', { name: 'Guardar estado' }).click();
     await expect(page.getByRole('status')).toContainText('Estado actualizado');
     const updated = page.locator('article').filter({ hasText: address });
+    await expect(updated.getByLabel('Estado')).toHaveValue('en_atencion');
     await updated.getByLabel('Estado').selectOption('resuelto');
     await updated.getByLabel('Observación pública (obligatoria para rechazar)').fill('Se realizó la limpieza del espacio.');
     await updated.getByRole('button', { name: 'Guardar estado' }).click();
     await expect(page.getByRole('status')).toContainText('Estado actualizado');
+    await expect(updated.getByLabel('Estado')).toHaveValue('resuelto');
     await updated.getByLabel('Nueva nota interna').fill('Turno de la cuadrilla municipal de prueba.');
     await updated.getByRole('button', { name: 'Guardar nota interna' }).click();
+    await expect(page).toHaveURL(/mensaje=nota/,{timeout:20000});
     await expect(page.getByRole('status')).toContainText('Nota interna guardada');
     await updated.getByText('Historial de atención').click();
     await expect(updated.locator('ol')).toContainText('resuelto');
@@ -147,7 +152,8 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByLabel('Contraseña').fill(citizenPassword!);
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await page.getByRole('link', { name: 'Mis reportes', exact: true }).click();
-    await expect(page.locator('article').filter({ hasText: address })).toContainText('resuelto');
+    await expect(page.getByRole('heading', { name: 'Mis reportes' })).toBeVisible();
+    await expect(page.locator('article').filter({ hasText: address })).toContainText('resuelto',{timeout:15000});
     await expect(page.locator('article').filter({ hasText: address })).toContainText('Se realizó la limpieza del espacio.');
     await expect(page.locator('article').filter({ hasText: address })).not.toContainText('Turno de la cuadrilla municipal de prueba.');
   });
