@@ -35,7 +35,7 @@ jobs:
       - name: Check tracked secrets
         run: |
           if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then exit 1; fi
-          if git grep -nE 'service_role|SUPABASE_SERVICE_ROLE_KEY|-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY-----' -- ':!*.md' ':!devsecops.yml'; then exit 1; fi
+          if git grep -nE 'service_role|SUPABASE_SERVICE_ROLE_KEY|-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY-----' -- ':!*.md' ':!.github/workflows/devsecops.yml'; then exit 1; fi
   gate:
     if: always()
     needs: [quality, security]
