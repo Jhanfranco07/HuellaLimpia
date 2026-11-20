@@ -92,6 +92,8 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByLabel('Distrito').selectOption('Comas');
     await page.getByLabel('Dirección o referencia').fill(address);
     await page.getByLabel('Describe el problema').fill('Se encontraron residuos de mascotas sin recoger en el parque.');
+    await page.getByLabel('Latitud').fill('-11.950000');
+    await page.getByLabel('Longitud').fill('-77.050000');
     const image = largeValidPng();
     expect(image.length).toBeGreaterThan(1024 * 1024);
     expect(image.length).toBeLessThan(5 * 1024 * 1024);
@@ -102,6 +104,9 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByRole('button', { name: 'Enviar reporte' }).click();
     await expect(page.getByRole('status')).toContainText('Reporte enviado');
     const citizenReport = page.locator('article').filter({ hasText: address });
+    await expect(citizenReport.getByTitle(/OpenStreetMap/)).toHaveAttribute('src', /openstreetmap\.org\/export\/embed\.html/);
+    await citizenReport.getByRole('button', { name: address }).click();
+    await expect(citizenReport.getByTitle(/OpenStreetMap/)).toHaveAttribute('src', /marker=/);
     await expect(citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' })).toBeVisible();
     const photoResponse = await page.request.get(await citizenReport.getByRole('link', { name: 'Ver fotografía adjunta' }).getAttribute('href') ?? '');
     expect(photoResponse.ok()).toBe(true);
@@ -113,15 +118,30 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByLabel('Contraseña').fill(municipalPassword!);
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page.getByRole('heading', { name: 'Reportes por estado' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Comparación entre distritos' })).toBeVisible();
+    for (const district of ['Los Olivos','Comas','San Martín de Porres','Independencia']) {
+      await expect(page.getByRole('row', { name: new RegExp(district) })).toBeVisible();
+    }
     await page.getByRole('link', { name: 'Gestión de reportes' }).click();
     const report = page.locator('article').filter({ hasText: address });
     await expect(report).toBeVisible();
     await expect(report.getByRole('link', { name: 'Ver fotografía adjunta' })).toBeVisible();
-    await report.getByLabel('Estado').selectOption('resuelto');
-    await report.getByLabel('Observación (obligatoria para rechazar)').fill('Se realizó la limpieza del espacio.');
+    await expect(report.getByRole('option', { name: 'resuelto' })).toHaveCount(0);
+    await report.getByLabel('Estado').selectOption('en_atencion');
+    await report.getByLabel('Observación pública (obligatoria para rechazar)').fill('La cuadrilla está revisando el punto.');
     await report.getByRole('button', { name: 'Guardar estado' }).click();
     await expect(page.getByRole('status')).toContainText('Estado actualizado');
     const updated = page.locator('article').filter({ hasText: address });
+    await expect(updated.locator('p.muted').first()).toContainText('en atencion');
+    await updated.getByLabel('Estado').selectOption('resuelto');
+    await updated.getByLabel('Observación pública (obligatoria para rechazar)').fill('Se realizó la limpieza del espacio.');
+    await updated.getByRole('button', { name: 'Guardar estado' }).click();
+    await expect(page.getByRole('status')).toContainText('Estado actualizado');
+    await expect(updated.locator('p.muted').first()).toContainText('resuelto');
+    await updated.getByLabel('Nueva nota interna').fill('Turno de la cuadrilla municipal de prueba.');
+    await updated.getByRole('button', { name: 'Guardar nota interna' }).click();
+    await expect(page).toHaveURL(/mensaje=nota/,{timeout:20000});
+    await expect(page.getByRole('status')).toContainText('Nota interna guardada');
     await updated.getByText('Historial de atención').click();
     await expect(updated.locator('ol')).toContainText('resuelto');
     await expect(updated.locator('ol')).toContainText('Se realizó la limpieza del espacio.');
@@ -132,8 +152,29 @@ test.describe('Perfil y mascotas con Supabase local', () => {
     await page.getByLabel('Contraseña').fill(citizenPassword!);
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await page.getByRole('link', { name: 'Mis reportes', exact: true }).click();
-    await expect(page.locator('article').filter({ hasText: address })).toContainText('resuelto');
+    await expect(page.getByRole('heading', { name: 'Mis reportes' })).toBeVisible();
+    await expect(page.locator('article').filter({ hasText: address })).toContainText('resuelto',{timeout:15000});
     await expect(page.locator('article').filter({ hasText: address })).toContainText('Se realizó la limpieza del espacio.');
+    await expect(page.locator('article').filter({ hasText: address })).not.toContainText('Turno de la cuadrilla municipal de prueba.');
+  });
+
+  test('fotografía: permite adjuntarla después de guardar el reporte', async ({ page }) => {
+    const address=`Parque sin foto ${Date.now()}`;
+    await page.goto('/acceso');
+    await page.getByLabel('Correo electrónico').fill(citizenEmail!);
+    await page.getByLabel('Contraseña').fill(citizenPassword!);
+    await page.getByRole('button',{name:'Ingresar'}).click();
+    await page.getByRole('link',{name:'Mis reportes',exact:true}).click();
+    await page.getByLabel('Distrito').selectOption('Comas');
+    await page.getByLabel('Dirección o referencia').fill(address);
+    await page.getByLabel('Describe el problema').fill('Reporte de prueba para recuperar una fotografía pendiente.');
+    await page.getByRole('button',{name:'Enviar reporte'}).click();
+    const report=page.locator('article').filter({hasText:address});
+    await expect(report.getByLabel('Adjuntar fotografía pendiente')).toBeVisible();
+    await report.getByLabel('Adjuntar fotografía pendiente').setInputFiles({name:'recuperada.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jqVcAAAAASUVORK5CYII=','base64')});
+    await report.getByRole('button',{name:'Adjuntar fotografía',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Fotografía adjuntada');
+    await expect(page.locator('article').filter({hasText:address}).getByRole('link',{name:'Ver fotografía adjunta'})).toBeVisible();
   });
 
   test('fotografía: rechaza archivo demasiado grande y formato no permitido', async ({ page }) => {
