@@ -17,4 +17,6 @@ La portada muestra los cuatro distritos sin abrir el FAQ, incorpora un enlace pa
 
 ## GitHub
 
-Añadir aquí la URL del commit, PR y ejecución de Actions después de publicarlos y verificar sus resultados.
+- Commit de implementación: [578cfaa](https://github.com/Jhanfranco07/HuellaLimpia/commit/578cfaa9e164dc24dd9730a4b4397de30362a73c).
+- Pull Request hacia `test`: [#1](https://github.com/Jhanfranco07/HuellaLimpia/pull/1).
+- Ejecución del commit de implementación: [Actions 44663499986](https://github.com/Jhanfranco07/HuellaLimpia/actions/runs/44663499986), finalizada correctamente con `quality`, `security`, `browser` y `gate` exitosos.
