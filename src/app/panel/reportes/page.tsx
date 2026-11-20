@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createIncident } from '@/app/actions';
 import { districts } from '@/lib/validation';
 import { SubmitButton } from '@/components/submit-button';
+import { ReportPhoto } from '@/components/report-photo';
 
 export default async function Reports({searchParams}:{searchParams:Promise<{error?:string;mensaje?:string}>}){
   const {db,user,profile}=await requireUser();
@@ -44,7 +45,7 @@ export default async function Reports({searchParams}:{searchParams:Promise<{erro
       <strong>{r.district} · {r.address}</strong><p>{r.description}</p>
       <p className="muted">Estado: {r.status.replaceAll('_',' ')} · {new Date(r.created_at).toLocaleDateString('es-PE')}</p>
       {r.observation&&<p>Observación municipal: {r.observation}</p>}
-      {photoUrls.get(r.id)&&<a href={photoUrls.get(r.id)!} target="_blank" rel="noopener noreferrer">Ver fotografía adjunta</a>}
+      {photoUrls.get(r.id)&&<ReportPhoto url={photoUrls.get(r.id)!} district={r.district} demo={r.address.startsWith('DEMO ACADÉMICA')} />}
     </article>)}</div>
   </>;
 }

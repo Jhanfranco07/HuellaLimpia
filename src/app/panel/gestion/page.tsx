@@ -2,6 +2,7 @@ import { requireUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { updateIncident } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
+import { ReportPhoto } from '@/components/report-photo';
 import { incidentStatuses } from '@/lib/validation';
 
 const statuses=incidentStatuses;
@@ -40,7 +41,7 @@ export default async function Management({searchParams}:{searchParams:Promise<{e
     <div className="stack" style={{marginTop:'2rem'}}>{reports?.map(r=><article className="card" key={r.id}>
       <h2>{r.address}</h2><p>{r.description}</p>
       <p className="muted">{new Date(r.created_at).toLocaleDateString('es-PE')} · {r.status.replaceAll('_',' ')}</p>
-      {photoUrls.get(r.id)&&<p><a href={photoUrls.get(r.id)!} target="_blank" rel="noopener noreferrer">Ver fotografía adjunta</a></p>}
+      {photoUrls.get(r.id)&&<ReportPhoto url={photoUrls.get(r.id)!} district={r.district} demo={r.address.startsWith('DEMO ACADÉMICA')} />}
       <form action={updateIncident}><input type="hidden" name="id" value={r.id}/>
         <label htmlFor={`status-${r.id}`}>Estado</label><select id={`status-${r.id}`} name="status" defaultValue={r.status}>
           {statuses.map(s=><option key={s} value={s}>{s.replaceAll('_',' ')}</option>)}
